@@ -9,6 +9,7 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
+    // Proxy only used in local dev — in production VITE_API_BASE_URL is used
     proxy: {
       '/api': {
         target: 'http://localhost:5000',

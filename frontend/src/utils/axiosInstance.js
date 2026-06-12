@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+// In production VITE_API_BASE_URL = full Render URL
+// In local dev it falls back to '' so Vite proxy handles /api/* calls
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 const axiosInstance = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || '',
+    baseURL: BASE_URL,
 });
 
 // Request interceptor — attach JWT token automatically from localStorage
