@@ -1,0 +1,10 @@
+# Never commit secrets or dependencies
+**/.env
+**/.env.local
+**/.env.production
+**/node_modules/
+**/dist/
+
+# OS files
+.DS_Store
+Thumbs.db
