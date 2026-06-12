@@ -44,6 +44,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const chefRoutes = require('./routes/chefRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const seedRoutes = require('./routes/seedRoutes');
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/food', foodRoutes);
@@ -51,6 +52,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/chefs', chefRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/seed', seedRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
