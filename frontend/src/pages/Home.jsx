@@ -35,11 +35,11 @@ const Home = () => {
     const { user } = useContext(AuthContext);
 
     const categories = [
-        { name: 'All', emoji: '🍽️' },
-        { name: 'North Indian', emoji: '🍛' },
-        { name: 'South Indian', emoji: '🥘' },
-        { name: 'Snacks', emoji: '🍟' },
-        { name: 'Tiffins', emoji: '🥗' }
+        { name: 'All',          emoji: '🍽️', type: 'all' },
+        { name: 'South Indian', emoji: '🥘', type: 'cuisine' },
+        { name: 'North Indian', emoji: '🍛', type: 'cuisine' },
+        { name: 'Snacks',       emoji: '🍟', type: 'mealType' },
+        { name: 'Tiffins',      emoji: '🥗', type: 'mealType' },
     ];
     
     const dietTypes = ['All', 'Veg', 'Non-Veg'];
@@ -76,9 +76,19 @@ const Home = () => {
 
     useEffect(() => {
         let items = [...foodItems];
+
         if (selectedCategory !== 'All') {
-            items = items.filter(item => item.category === selectedCategory);
+            const cat = categories.find(c => c.name === selectedCategory);
+            if (cat?.type === 'cuisine') {
+                // South Indian / North Indian → filter by cuisine field
+                items = items.filter(item => item.cuisine === selectedCategory);
+            } else if (cat?.type === 'mealType') {
+                // Snacks → mealType === 'Snack', Tiffins → mealType === 'Tiffin'
+                const mealTypeMap = { 'Snacks': 'Snack', 'Tiffins': 'Tiffin' };
+                items = items.filter(item => item.mealType === mealTypeMap[selectedCategory]);
+            }
         }
+
         if (selectedDiet !== 'All') {
             items = items.filter(item => item.dietType === selectedDiet);
         }
@@ -247,10 +257,10 @@ const Home = () => {
                                     </div>
                                 )}
 
-                                {/* Category Badge */}
-                                {item.category && (
+                                {/* Meal Type Badge — shows BREAKFAST, LUNCH, SNACK etc */}
+                                {item.mealType && (
                                     <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-[2px] text-white text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-lg">
-                                        {item.category}
+                                        {item.mealType}
                                     </div>
                                 )}
 
