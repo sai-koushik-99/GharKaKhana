@@ -27,23 +27,36 @@ const Home = () => {
     const [filteredItems, setFilteredItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('All');
+    const [selectedCuisine, setSelectedCuisine] = useState('All');   // All | South Indian | North Indian
+    const [selectedMealType, setSelectedMealType] = useState('All'); // All | Main Course | Snack | Tiffin
     const [selectedDiet, setSelectedDiet] = useState('All');
     const [sortBy, setSortBy] = useState('Default');
     const [showScrollTop, setShowScrollTop] = useState(false);
 
     const { user } = useContext(AuthContext);
 
-    const categories = [
-        { name: 'All',          emoji: '🍽️', type: 'all' },
-        { name: 'South Indian', emoji: '🥘', type: 'cuisine' },
-        { name: 'North Indian', emoji: '🍛', type: 'cuisine' },
-        { name: 'Snacks',       emoji: '🍟', type: 'mealType' },
-        { name: 'Tiffins',      emoji: '🥗', type: 'mealType' },
+    const cuisines = [
+        { name: 'All',          emoji: '🍽️' },
+        { name: 'South Indian', emoji: '🥘' },
+        { name: 'North Indian', emoji: '🍛' },
     ];
-    
+
+    // Sub-categories shown only when a cuisine is selected
+    const mealTypes = [
+        { name: 'All',         emoji: '🍽️', label: 'All' },
+        { name: 'Main Course', emoji: '🥘', label: 'Main Course' },
+        { name: 'Snack',       emoji: '🍟', label: 'Snacks' },
+        { name: 'Tiffin',      emoji: '🥗', label: 'Tiffins' },
+    ];
+
     const dietTypes = ['All', 'Veg', 'Non-Veg'];
     const sortOptions = ['Default', 'Price: Low to High', 'Price: High to Low', 'Name (A-Z)'];
+
+    // When cuisine changes, reset meal type
+    const handleCuisineChange = (cuisine) => {
+        setSelectedCuisine(cuisine);
+        setSelectedMealType('All');
+    };
 
     useEffect(() => {
         const fetchFoodItems = async () => {
@@ -77,18 +90,24 @@ const Home = () => {
     useEffect(() => {
         let items = [...foodItems];
 
-        if (selectedCategory !== 'All') {
-            const cat = categories.find(c => c.name === selectedCategory);
-            if (cat?.type === 'cuisine') {
-                // South Indian / North Indian → filter by cuisine field
-                items = items.filter(item => item.cuisine === selectedCategory);
-            } else if (cat?.type === 'mealType') {
-                // Snacks → mealType === 'Snack', Tiffins → mealType === 'Tiffin'
-                const mealTypeMap = { 'Snacks': 'Snack', 'Tiffins': 'Tiffin' };
-                items = items.filter(item => item.mealType === mealTypeMap[selectedCategory]);
+        // Level 1 — cuisine filter
+        if (selectedCuisine !== 'All') {
+            items = items.filter(item => item.cuisine === selectedCuisine);
+        }
+
+        // Level 2 — meal type sub-filter
+        // Main Course = Breakfast + Lunch + Dinner
+        if (selectedMealType !== 'All') {
+            if (selectedMealType === 'Main Course') {
+                items = items.filter(item =>
+                    ['Breakfast', 'Lunch', 'Dinner'].includes(item.mealType)
+                );
+            } else {
+                items = items.filter(item => item.mealType === selectedMealType);
             }
         }
 
+        // Diet filter
         if (selectedDiet !== 'All') {
             items = items.filter(item => item.dietType === selectedDiet);
         }
@@ -108,7 +127,7 @@ const Home = () => {
         }
 
         setFilteredItems(items);
-    }, [selectedCategory, selectedDiet, sortBy, foodItems]);
+    }, [selectedCuisine, selectedMealType, selectedDiet, sortBy, foodItems]);
 
     if (error) {
         return (
@@ -142,51 +161,72 @@ const Home = () => {
                 )}
             </div>
 
-            {/* Filter Bar */}
+            {/* Filter Bar — two level */}
             <div className="bg-white rounded-2xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-brand-border-gray mb-8 space-y-4">
-                <div className="flex flex-col lg:flex-row gap-5 justify-between">
-                    {/* Category Filter */}
-                    <div className="flex flex-col gap-2">
-                        <span className="text-xs font-bold uppercase tracking-wider text-brand-mid-gray">Category</span>
-                        <div className="flex flex-wrap gap-2">
-                            {categories.map(cat => (
-                                <button
-                                    key={cat.name}
-                                    onClick={() => setSelectedCategory(cat.name)}
-                                    className={`px-4.5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
-                                        selectedCategory === cat.name 
-                                            ? 'bg-brand-orange text-white shadow-sm' 
-                                            : 'bg-brand-light-gray text-brand-dark-brown hover:bg-brand-light-orange hover:text-brand-orange border border-brand-border-gray/50'
-                                    }`}
-                                >
-                                    <span className="mr-1.5">{cat.emoji}</span>
-                                    {cat.name}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
 
-                    {/* Diet Type Filter (Radio button toggle styling) */}
-                    <div className="flex flex-col gap-2 lg:w-72">
-                        <span className="text-xs font-bold uppercase tracking-wider text-brand-mid-gray">Diet Type</span>
-                        <div className="flex bg-brand-light-gray p-1 rounded-xl border border-brand-border-gray/50">
-                            {dietTypes.map(diet => (
-                                <button
-                                    key={diet}
-                                    onClick={() => setSelectedDiet(diet)}
-                                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                                        selectedDiet === diet 
-                                            ? 'bg-brand-orange text-white shadow-sm' 
-                                            : 'text-brand-mid-gray hover:text-brand-orange'
-                                    }`}
-                                >
-                                    <span className="text-[10px]">
-                                        {diet === 'Veg' ? '🟢' : diet === 'Non-Veg' ? '🔴' : '⚪'}
-                                    </span>
-                                    {diet}
-                                </button>
-                            ))}
-                        </div>
+                {/* Row 1 — Cuisine (primary filter) */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <span className="text-xs font-bold uppercase tracking-wider text-brand-mid-gray w-20 flex-shrink-0">Cuisine</span>
+                    <div className="flex flex-wrap gap-2">
+                        {cuisines.map(c => (
+                            <button
+                                key={c.name}
+                                onClick={() => handleCuisineChange(c.name)}
+                                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                                    selectedCuisine === c.name
+                                        ? 'bg-brand-orange text-white shadow-sm'
+                                        : 'bg-brand-light-gray text-brand-dark-brown hover:bg-brand-light-orange hover:text-brand-orange border border-brand-border-gray/50'
+                                }`}
+                            >
+                                <span className="mr-1.5">{c.emoji}</span>{c.name}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Row 2 — Meal Type sub-filter (always visible, greyed when cuisine = All) */}
+                <div className={`flex flex-col sm:flex-row sm:items-center gap-3 pt-3 border-t border-brand-border-gray/50 transition-opacity ${selectedCuisine === 'All' ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+                    <span className="text-xs font-bold uppercase tracking-wider text-brand-mid-gray w-20 flex-shrink-0">
+                        Type
+                        {selectedCuisine === 'All' && <span className="block normal-case font-normal text-[10px] mt-0.5">Select cuisine first</span>}
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                        {mealTypes.map(m => (
+                            <button
+                                key={m.name}
+                                onClick={() => setSelectedMealType(m.name)}
+                                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                                    selectedMealType === m.name
+                                        ? 'bg-brand-dark-brown text-white shadow-sm'
+                                        : 'bg-brand-light-gray text-brand-dark-brown hover:bg-gray-200 border border-brand-border-gray/50'
+                                }`}
+                            >
+                                <span className="mr-1.5">{m.emoji}</span>{m.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Row 3 — Diet Type */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-3 border-t border-brand-border-gray/50">
+                    <span className="text-xs font-bold uppercase tracking-wider text-brand-mid-gray w-20 flex-shrink-0">Diet</span>
+                    <div className="flex bg-brand-light-gray p-1 rounded-xl border border-brand-border-gray/50 w-full max-w-xs">
+                        {dietTypes.map(diet => (
+                            <button
+                                key={diet}
+                                onClick={() => setSelectedDiet(diet)}
+                                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                                    selectedDiet === diet
+                                        ? 'bg-brand-orange text-white shadow-sm'
+                                        : 'text-brand-mid-gray hover:text-brand-orange'
+                                }`}
+                            >
+                                <span className="text-[10px]">
+                                    {diet === 'Veg' ? '🟢' : diet === 'Non-Veg' ? '🔴' : '⚪'}
+                                </span>
+                                {diet}
+                            </button>
+                        ))}
                     </div>
                 </div>
             </div>
@@ -224,7 +264,7 @@ const Home = () => {
                     <h3 className="text-xl font-bold text-brand-dark-brown">No meals found</h3>
                     <p className="text-brand-mid-gray mt-2">Try clearing your filters or changing categories to see available listings.</p>
                     <button 
-                        onClick={() => { setSelectedCategory('All'); setSelectedDiet('All'); setSortBy('Default'); }} 
+                        onClick={() => { setSelectedCuisine('All'); setSelectedMealType('All'); setSelectedDiet('All'); setSortBy('Default'); }} 
                         className="mt-5 px-5 py-2 bg-brand-orange text-white font-semibold rounded-xl hover:bg-brand-hover-orange transition-all btn-active-scale shadow-sm"
                     >
                         Reset All Filters
