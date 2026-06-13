@@ -30,13 +30,12 @@ const MandalaWatermark = () => (
 
 const SkeletonCard = () => (
     <div className="food-card overflow-hidden flex flex-col">
-        <div className="h-[200px] w-full animate-shimmer"></div>
-        <div className="p-4 flex flex-col flex-grow space-y-3 relative z-10">
-            <div className="h-5 w-3/4 bg-amber-100 rounded animate-pulse"></div>
+        <div className="w-full animate-shimmer" style={{height:'130px'}}></div>
+        <div className="flex flex-col gap-2" style={{padding:'10px 12px'}}>
+            <div className="h-3.5 w-3/4 bg-amber-100 rounded animate-pulse"></div>
             <div className="h-3 w-1/2 bg-amber-50 rounded animate-pulse"></div>
-            <div className="h-3 w-full bg-amber-50 rounded animate-pulse"></div>
-            <div className="h-3 w-5/6 bg-amber-50 rounded animate-pulse"></div>
-            <div className="h-10 w-full bg-amber-100 rounded-xl animate-pulse mt-auto"></div>
+            <div className="h-3 w-1/3 bg-amber-50 rounded animate-pulse"></div>
+            <div className="h-7 w-full bg-amber-100 rounded-lg animate-pulse mt-1"></div>
         </div>
     </div>
 );
@@ -241,29 +240,30 @@ const Home = () => {
 
             {/* ── CARDS GRID ── */}
             {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:'16px'}}>
                     {Array(8).fill(0).map((_, i) => <SkeletonCard key={i} />)}
                 </div>
             ) : filteredItems.length === 0 ? (
-                <div className="rounded-2xl p-16 text-center max-w-lg mx-auto mt-8"
+                <div className="rounded-2xl p-12 text-center max-w-md mx-auto mt-8"
                     style={{ background: 'linear-gradient(135deg, #FDF6EC, #FFF9F4)', border: '1px solid rgba(244,162,40,0.3)' }}>
-                    <span className="text-5xl block mb-4">🍽️</span>
-                    <h3 className="text-xl font-bold" style={{color:'#3B1F0A', fontFamily:'Poppins,sans-serif'}}>No meals found</h3>
-                    <p className="mt-2 text-sm" style={{color:'#A0522D', fontFamily:'Hind,sans-serif'}}>Try clearing your filters to see all available dishes.</p>
+                    <span className="text-4xl block mb-3">🍽️</span>
+                    <h3 className="text-lg font-bold" style={{color:'#3B1F0A', fontFamily:'Poppins,sans-serif'}}>No meals found</h3>
+                    <p className="mt-1 text-sm" style={{color:'#A0522D', fontFamily:'Hind,sans-serif'}}>Try clearing your filters to see all available dishes.</p>
                     <button onClick={() => { setSelectedCuisine('All'); setSelectedMealType('All'); setSelectedDiet('All'); setSortBy('Default'); }}
-                        className="mt-5 px-5 py-2 text-white font-semibold rounded-xl transition-all btn-active-scale shadow-sm"
+                        className="mt-4 px-5 py-2 text-white font-semibold rounded-xl transition-all btn-active-scale text-sm"
                         style={{background:'linear-gradient(135deg, #F4A228, #E8B84B)'}}>
                         Reset All Filters
                     </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:'16px'}}>
                     {filteredItems.map(item => (
                         <div key={item._id} className="food-card flex flex-col">
                             <MandalaWatermark />
 
-                            {/* Image section */}
-                            <div className="h-[200px] relative flex-shrink-0" style={{borderRadius:'14px 14px 0 0', overflow:'hidden'}}>
+                            {/* ── IMAGE (130px fixed) ── */}
+                            <div className="relative flex-shrink-0"
+                                style={{height:'130px', borderRadius:'9px 9px 0 0', overflow:'hidden'}}>
                                 <ImageWithFallback
                                     src={item.imageUrl}
                                     alt={item.title}
@@ -271,83 +271,72 @@ const Home = () => {
                                     className="w-full h-full"
                                 />
                                 {/* Warm overlay */}
-                                <div className="absolute inset-0 pointer-events-none" style={{background:'rgba(244,162,40,0.06)'}}></div>
-
-                                {/* Gradient fade to card body */}
-                                <div className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none"
-                                    style={{background:'linear-gradient(to top, #FDF6EC 0%, transparent 100%)'}}></div>
+                                <div className="absolute inset-0 pointer-events-none"
+                                    style={{background:'rgba(244,162,40,0.05)'}}></div>
+                                {/* Gradient fade into card */}
+                                <div className="absolute bottom-0 left-0 right-0 pointer-events-none"
+                                    style={{height:'40px', background:'linear-gradient(to top, #FDF6EC 0%, transparent 100%)'}}></div>
 
                                 {/* Meal type badge — top left */}
                                 {item.mealType && (
-                                    <div className="absolute top-3 left-3 z-10 meal-type-badge flex items-center gap-1">
+                                    <div className="absolute top-2 left-2 z-10 meal-type-badge flex items-center gap-1">
                                         🍽️ {item.mealType}
                                     </div>
                                 )}
 
-                                {/* Veg/Non-veg dot — top right */}
+                                {/* Veg/Non-veg dot — top right, 28px circle */}
                                 {item.dietType && (
-                                    <div className="absolute top-3 right-3 z-10 w-7 h-7 bg-white rounded-full shadow-md flex items-center justify-center"
-                                        style={{border: item.dietType === 'Veg' ? '1.5px solid #2D6A4F' : '1.5px solid #C0392B'}}>
-                                        <div className="w-3 h-3 rounded-full"
-                                            style={{background: item.dietType === 'Veg' ? '#2D6A4F' : '#C0392B'}}></div>
+                                    <div className="absolute top-2 right-2 z-10 flex items-center justify-center bg-white rounded-full shadow"
+                                        style={{width:'24px', height:'24px', border: item.dietType === 'Veg' ? '1.5px solid #2D6A4F' : '1.5px solid #C0392B'}}>
+                                        <div className="rounded-full"
+                                            style={{width:'10px', height:'10px', background: item.dietType === 'Veg' ? '#2D6A4F' : '#C0392B'}}></div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Card body */}
-                            <div className="p-4 flex flex-col flex-grow relative z-10">
+                            {/* ── CARD BODY ── */}
+                            <div className="flex flex-col flex-grow relative z-10"
+                                style={{padding:'10px 12px'}}>
 
-                                {/* Dish name */}
-                                <h3 className="font-semibold mb-0.5 line-clamp-1 hover:text-[#C1440E] transition-colors"
-                                    style={{fontFamily:'Poppins,sans-serif', fontSize:'16px', color:'#3B1F0A', fontWeight:600}}>
+                                {/* Dish name — 14px 500 */}
+                                <h3 className="line-clamp-1 hover:text-[#C1440E] transition-colors mb-0.5"
+                                    style={{fontFamily:'Poppins,sans-serif', fontSize:'14px', fontWeight:500, color:'#3B1F0A'}}>
                                     <Link to={`/dish/${item._id}`}>{item.title}</Link>
                                 </h3>
 
-                                {/* Chef name */}
-                                <p className="text-xs mb-2 flex items-center gap-1"
-                                    style={{fontFamily:'Hind,sans-serif', color:'#A0522D'}}>
-                                    <span>👩‍🍳</span> by Chef {item.chefName}
+                                {/* Chef name — 12px muted */}
+                                <p className="mb-1.5 flex items-center gap-1 truncate"
+                                    style={{fontFamily:'Hind,sans-serif', fontSize:'12px', color:'#A0522D'}}>
+                                    <span style={{fontSize:'11px'}}>👩‍🍳</span>
+                                    {item.chefName}
                                 </p>
 
-                                {/* Meta row — rating, time, cuisine */}
-                                <div className="flex items-center gap-3 text-xs mb-3"
-                                    style={{fontFamily:'Hind,sans-serif', color:'#8B5E3C'}}>
-                                    <span className="flex items-center gap-0.5">
-                                        <span className="text-amber-500">⭐</span> 4.8
+                                {/* Cuisine tag + rating row */}
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="flex items-center gap-0.5"
+                                        style={{fontSize:'11px', color:'#8B5E3C', fontFamily:'Hind,sans-serif'}}>
+                                        <span style={{color:'#F4A228'}}>⭐</span> 4.8
                                     </span>
-                                    <span className="flex items-center gap-0.5">
-                                        <span>🕐</span> 30 min
-                                    </span>
-                                    <span className="flex items-center gap-0.5 ml-auto">
-                                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                                            style={{background:'rgba(244,162,40,0.12)', color:'#A0522D'}}>
-                                            {item.cuisine || item.category}
-                                        </span>
+                                    <span className="rounded-full px-1.5 py-0.5"
+                                        style={{fontSize:'10px', fontWeight:600, background:'rgba(244,162,40,0.12)', color:'#A0522D', fontFamily:'Poppins,sans-serif'}}>
+                                        {item.cuisine || item.category}
                                     </span>
                                 </div>
 
-                                {/* Description */}
-                                <p className="text-xs leading-relaxed line-clamp-2 mb-4 flex-grow"
-                                    style={{fontFamily:'Hind,sans-serif', color:'#7A5C3C'}}>
-                                    {item.description}
-                                </p>
-
-                                {/* Price + Button */}
-                                <div className="mt-auto">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <span className="font-extrabold text-xl"
-                                            style={{fontFamily:'Poppins,sans-serif', color:'#F4A228'}}>
-                                            ₹{item.price.toFixed(0)}
-                                        </span>
-                                        {item.dietType === 'Veg'
-                                            ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{background:'rgba(45,106,79,0.1)', color:'#2D6A4F'}}>Pure Veg</span>
-                                            : <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{background:'rgba(192,57,43,0.1)', color:'#C0392B'}}>Non-Veg</span>
-                                        }
-                                    </div>
-                                    <Link to={`/dish/${item._id}`} className="add-to-cart-btn">
-                                        Order Now <span className="text-base">→</span>
-                                    </Link>
+                                {/* Price — 13px accent */}
+                                <div className="flex items-center justify-between mb-2.5">
+                                    <span style={{fontFamily:'Poppins,sans-serif', fontSize:'15px', fontWeight:700, color:'#F4A228'}}>
+                                        ₹{item.price.toFixed(0)}
+                                    </span>
+                                    <span style={{fontSize:'10px', fontWeight:600, color: item.dietType === 'Veg' ? '#2D6A4F' : '#C0392B'}}>
+                                        {item.dietType}
+                                    </span>
                                 </div>
+
+                                {/* Order button */}
+                                <Link to={`/dish/${item._id}`} className="add-to-cart-btn mt-auto">
+                                    Order Now <span>→</span>
+                                </Link>
                             </div>
                         </div>
                     ))}
