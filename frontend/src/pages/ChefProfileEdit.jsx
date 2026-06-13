@@ -1,12 +1,11 @@
 import { useState, useEffect, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import axiosInstance from '../utils/axiosInstance';
 import ImageUpload from '../components/ImageUpload';
 
 const ChefProfileEdit = () => {
     const { user } = useContext(AuthContext);
-    const navigate = useNavigate();
 
     const [bio, setBio] = useState('');
     const [speciality, setSpeciality] = useState('');
@@ -29,6 +28,7 @@ const ChefProfileEdit = () => {
                 setProfilePhoto(chef.profilePhoto || '');
                 setLoading(false);
             } catch (err) {
+                console.error(err);
                 setError('Failed to load profile.');
                 setLoading(false);
             }

@@ -24,7 +24,11 @@ const Navbar = () => {
 
     // Close dropdown on route change
     useEffect(() => {
-        setDropdownOpen(false);
+        const closeDropdown = async () => {
+            await Promise.resolve();
+            setDropdownOpen(false);
+        };
+        closeDropdown();
     }, [location]);
 
     // Fetch active orders count for cart badge
@@ -36,24 +40,36 @@ const Navbar = () => {
                     // Filter orders that are not Completed or Rejected
                     const active = data.filter(order => order.status === 'Pending' || order.status === 'Accepted');
                     
-                    if (active.length !== activeOrdersCount) {
-                        setActiveOrdersCount(active.length);
-                        setBadgeAnimated(true);
-                        setTimeout(() => setBadgeAnimated(false), 300);
-                    }
+                    setActiveOrdersCount(prev => {
+                        if (active.length !== prev) {
+                            setBadgeAnimated(true);
+                            setTimeout(() => setBadgeAnimated(false), 300);
+                            return active.length;
+                        }
+                        return prev;
+                    });
                 } catch (err) {
                     console.error('Error fetching active orders count:', err);
                 }
             };
             
-            fetchActiveOrders();
+            const loadOrders = async () => {
+                await Promise.resolve();
+                fetchActiveOrders();
+            };
+            loadOrders();
+            
             // Poll every 15 seconds to keep badge updated
             const interval = setInterval(fetchActiveOrders, 15000);
             return () => clearInterval(interval);
         } else {
-            setActiveOrdersCount(0);
+            const resetCount = async () => {
+                await Promise.resolve();
+                setActiveOrdersCount(prev => prev !== 0 ? 0 : prev);
+            };
+            resetCount();
         }
-    }, [user, activeOrdersCount]);
+    }, [user]);
 
     const handleLogout = () => {
         logout();

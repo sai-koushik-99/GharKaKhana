@@ -13,8 +13,7 @@ const DishDetails = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    const [quantity, setQuantity] = useState(1);
-    const [deliveryAddress, setDeliveryAddress] = useState(user?.address || '');
+    const [quantity, setQuantity] = useState(1);    const [deliveryAddress, setDeliveryAddress] = useState(user?.address || '');
     const [deliveryTime, setDeliveryTime] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('UPI');
     const [paymentOption, setPaymentOption] = useState('full'); // 'full' or 'advance'
@@ -101,24 +100,21 @@ const DishDetails = () => {
 
     return (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-brand-border-gray/50 overflow-hidden flex flex-col md:flex-row">
-                
+            <div className="rounded-2xl overflow-hidden flex flex-col md:flex-row"
+                style={{background:'linear-gradient(160deg,#FDF6EC,#FFF9F2)', border:'1px solid rgba(244,162,40,0.25)', boxShadow:'0 4px 20px rgba(193,68,14,0.07)'}}>
+
                 {/* Image Section */}
-                <div className="md:w-1/2 min-h-[300px] md:h-auto bg-brand-light-gray relative">
-                    <ImageWithFallback 
-                        src={dish.imageUrl} 
-                        alt={dish.title} 
-                        dishName={dish.title}
-                        className="w-full h-full"
-                    />
-                    
+                <div className="md:w-1/2 min-h-[300px] md:h-auto relative" style={{background:'#F5EAD8'}}>
+                    <ImageWithFallback src={dish.imageUrl} alt={dish.title} dishName={dish.title} className="w-full h-full" />
                     {dish.dietType && (
-                        <div className={`absolute top-4 right-4 flex items-center justify-center w-8 h-8 bg-white rounded-lg shadow-md border ${
-                            dish.dietType === 'Veg' ? 'border-brand-veg-green/30' : 'border-brand-nonveg-red/30'
-                        }`}>
-                            <div className={`w-4 h-4 rounded-full ${
-                                dish.dietType === 'Veg' ? 'bg-brand-veg-green' : 'bg-brand-nonveg-red'
-                            }`}></div>
+                        <div className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 bg-white rounded-full shadow-md"
+                            style={{border: dish.dietType === 'Veg' ? '1.5px solid #2D6A4F' : '1.5px solid #C0392B'}}>
+                            <div className="w-4 h-4 rounded-full" style={{background: dish.dietType === 'Veg' ? '#2D6A4F' : '#C0392B'}}></div>
+                        </div>
+                    )}
+                    {dish.mealType && (
+                        <div className="absolute top-4 left-4 meal-type-badge flex items-center gap-1">
+                            🍽️ {dish.mealType}
                         </div>
                     )}
                 </div>
@@ -128,29 +124,27 @@ const DishDetails = () => {
                     <div>
                         <div className="flex justify-between items-start mb-2 gap-4">
                             <div>
-                                <h1 className="text-2xl sm:text-3xl font-extrabold text-brand-dark-brown tracking-tight">{dish.title}</h1>
-                                {dish.category && (
-                                    <span className="inline-block mt-1 text-[10px] font-bold uppercase tracking-wider bg-brand-light-orange text-brand-orange px-2.5 py-0.5 rounded-lg">
-                                        {dish.category}
-                                    </span>
-                                )}
+                                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight" style={{color:'#3B1F0A', fontFamily:'Poppins,sans-serif'}}>{dish.title}</h1>
+                                <div className="flex gap-2 mt-1 flex-wrap">
+                                    {dish.cuisine && (
+                                        <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full"
+                                            style={{background:'rgba(244,162,40,0.12)', color:'#A0522D', fontFamily:'Poppins,sans-serif'}}>
+                                            {dish.cuisine}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                            <span className="text-2xl font-extrabold text-brand-orange whitespace-nowrap">₹{dish.price.toFixed(2)}</span>
+                            <span className="text-2xl font-extrabold whitespace-nowrap" style={{color:'#F4A228', fontFamily:'Poppins,sans-serif'}}>₹{dish.price.toFixed(0)}</span>
                         </div>
-                        <p className="text-xs text-brand-mid-gray mb-4 font-semibold">
-                            Prepared with care by Home Chef: <span className="text-brand-dark-brown">{dish.chefName}</span>
+                        <p className="text-xs mb-4 font-semibold flex items-center gap-1" style={{color:'#A0522D', fontFamily:'Hind,sans-serif'}}>
+                            <span>👩‍🍳</span> Prepared with care by Chef <span style={{color:'#3B1F0A'}}>{dish.chefName}</span>
                         </p>
-                        
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-amber-500 mb-4 bg-amber-50 self-start px-2 py-0.5 rounded-md">
-                            <span>★</span>
-                            <span>4.8 Rating</span>
-                            <span className="text-brand-mid-gray/50 font-normal">|</span>
-                            <span className="text-brand-mid-gray font-semibold">Home Kitchen Verified</span>
+                        <div className="flex items-center gap-1.5 text-xs font-bold mb-4 px-2 py-1 rounded-md self-start w-fit"
+                            style={{background:'rgba(244,162,40,0.1)', color:'#A0522D', fontFamily:'Hind,sans-serif'}}>
+                            <span style={{color:'#F4A228'}}>★</span>
+                            <span>Home Kitchen Verified</span>
                         </div>
-
-                        <p className="text-brand-mid-gray text-sm leading-relaxed mb-6">
-                            {dish.description}
-                        </p>
+                        <p className="text-sm leading-relaxed mb-6" style={{color:'#7A5C3C', fontFamily:'Hind,sans-serif'}}>{dish.description}</p>
                     </div>
 
                     {orderSuccess ? (
@@ -166,7 +160,7 @@ const DishDetails = () => {
                                         type="number"
                                         min="1"
                                         value={quantity}
-                                        onChange={(e) => setQuantity(e.target.value)}
+                                        onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                                         className="block w-full border border-brand-border-gray rounded-xl px-3 py-2 text-sm text-brand-dark-brown font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange/40"
                                     />
                                 </div>
@@ -230,9 +224,9 @@ const DishDetails = () => {
                                 <button
                                     type="submit"
                                     disabled={orderLoading}
-                                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-brand-orange hover:bg-brand-hover-orange focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange transition-all disabled:bg-gray-400 btn-active-scale cursor-pointer"
-                                >
-                                    {orderLoading ? 'Processing Checkout...' : 'Confirm Order & Pay'}
+                                    className="add-to-cart-btn disabled:opacity-50 disabled:cursor-not-allowed"
+                                    style={{fontSize:'14px', padding:'12px 16px', borderRadius:'12px'}}>
+                                    {orderLoading ? 'Processing...' : 'Confirm Order & Pay →'}
                                 </button>
                             </div>
                         </form>

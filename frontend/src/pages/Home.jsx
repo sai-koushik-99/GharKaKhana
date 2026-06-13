@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 import { AuthContext } from '../context/AuthContext';
@@ -42,7 +42,6 @@ const SkeletonCard = () => (
 
 const Home = () => {
     const [foodItems, setFoodItems] = useState([]);
-    const [filteredItems, setFilteredItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [selectedCuisine, setSelectedCuisine] = useState('All');
@@ -84,7 +83,6 @@ const Home = () => {
             try {
                 const { data } = await axiosInstance.get('/api/food');
                 setFoodItems(data);
-                setFilteredItems(data);
                 setLoading(false);
             } catch (err) {
                 setError(err.response?.data?.message || err.message);
@@ -100,7 +98,7 @@ const Home = () => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    useEffect(() => {
+    const filteredItems = useMemo(() => {
         let items = [...foodItems];
         if (selectedCuisine !== 'All') {
             items = items.filter(item => item.cuisine === selectedCuisine);
@@ -121,16 +119,8 @@ const Home = () => {
             case 'Name (A-Z)': items.sort((a, b) => a.title.localeCompare(b.title)); break;
             default: break;
         }
-        setFilteredItems(items);
+        return items;
     }, [selectedCuisine, selectedMealType, selectedDiet, sortBy, foodItems]);
-
-    const mealTypeColors = {
-        Breakfast: 'from-amber-400 to-yellow-300',
-        Lunch:     'from-orange-400 to-amber-300',
-        Dinner:    'from-red-400 to-orange-400',
-        Snack:     'from-green-500 to-emerald-400',
-        Tiffin:    'from-purple-400 to-indigo-400',
-    };
 
     if (error) return (
         <div className="max-w-7xl mx-auto px-4 py-16 text-center">
@@ -163,54 +153,128 @@ const Home = () => {
                 )}
             </div>
 
-            {/* ── FILTER BAR ── */}
-            <div className="rounded-2xl p-5 mb-8 space-y-4"
-                style={{ background: 'linear-gradient(135deg, #FDF6EC 0%, #FFF9F4 100%)', border: '1px solid rgba(244,162,40,0.25)', boxShadow: '0 2px 12px rgba(244,162,40,0.08)' }}>
+            {/* ── FILTER BAR — compact ── */}
+            <div className="rounded-xl mb-6" style={{
+                background: 'linear-gradient(135deg, #FDF6EC 0%, #FFF9F4 100%)',
+                border: '1px solid rgba(244,162,40,0.22)',
+                boxShadow: '0 2px 8px rgba(244,162,40,0.07)',
+                padding: '12px 16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px'
+            }}>
 
                 {/* Row 1 — Cuisine */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                    <span className="text-xs font-bold uppercase tracking-wider w-24 flex-shrink-0" style={{color:'#A0522D', fontFamily:'Poppins,sans-serif'}}>
-                        Cuisine
-                    </span>
-                    <div className="flex flex-wrap gap-2">
+                <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                    <span style={{
+                        width:'80px', flexShrink:0,
+                        fontSize:'10px', fontWeight:600,
+                        letterSpacing:'0.06em', textTransform:'uppercase',
+                        color:'#A0522D', fontFamily:'Poppins,sans-serif'
+                    }}>Cuisine</span>
+                    <div style={{display:'flex', flexWrap:'wrap', gap:'8px'}}>
                         {cuisines.map(c => (
                             <button key={c.name} onClick={() => handleCuisineChange(c.name)}
-                                className={`px-4 py-2 rounded-full text-sm transition-all duration-200 cursor-pointer ${selectedCuisine === c.name ? 'filter-pill-active' : 'filter-pill-inactive'}`}
-                                style={{fontFamily:'Poppins,sans-serif'}}>
-                                <span className="mr-1.5">{c.emoji}</span>{c.name}
+                                style={{
+                                    height:'30px', padding:'0 14px',
+                                    borderRadius:'9999px', fontSize:'12px',
+                                    fontFamily:'Poppins,sans-serif', fontWeight:500,
+                                    cursor:'pointer', border:'none',
+                                    display:'flex', alignItems:'center', gap:'5px',
+                                    transition:'all 0.18s ease',
+                                    background: selectedCuisine === c.name
+                                        ? 'linear-gradient(135deg, #F4A228, #E8B84B)'
+                                        : '#FDF6EC',
+                                    color: selectedCuisine === c.name ? '#fff' : '#3B1F0A',
+                                    boxShadow: selectedCuisine === c.name
+                                        ? '0 2px 6px rgba(244,162,40,0.3)'
+                                        : 'none',
+                                    outline: selectedCuisine === c.name
+                                        ? 'none'
+                                        : '1px solid rgba(244,162,40,0.35)',
+                                }}>
+                                <span style={{fontSize:'13px'}}>{c.emoji}</span>{c.name}
                             </button>
                         ))}
                     </div>
                 </div>
 
-                {/* Row 2 — Meal Type sub-filter */}
-                <div className={`flex flex-col sm:flex-row sm:items-center gap-3 pt-3 border-t transition-opacity`}
-                    style={{ borderColor: 'rgba(244,162,40,0.2)', opacity: selectedCuisine === 'All' ? 0.4 : 1, pointerEvents: selectedCuisine === 'All' ? 'none' : 'all' }}>
-                    <span className="text-xs font-bold uppercase tracking-wider w-24 flex-shrink-0" style={{color:'#A0522D', fontFamily:'Poppins,sans-serif'}}>
+                {/* Row 2 — Meal Type */}
+                <div style={{
+                    display:'flex', alignItems:'center', gap:'8px',
+                    opacity: selectedCuisine === 'All' ? 0.4 : 1,
+                    pointerEvents: selectedCuisine === 'All' ? 'none' : 'all',
+                    transition: 'opacity 0.2s'
+                }}>
+                    <span style={{
+                        width:'80px', flexShrink:0,
+                        fontSize:'10px', fontWeight:600,
+                        letterSpacing:'0.06em', textTransform:'uppercase',
+                        color:'#A0522D', fontFamily:'Poppins,sans-serif',
+                        lineHeight:1.3
+                    }}>
                         Type
-                        {selectedCuisine === 'All' && <span className="block normal-case font-normal text-[10px] mt-0.5 text-amber-400">Pick cuisine first</span>}
+                        {selectedCuisine === 'All' &&
+                            <span style={{display:'block', fontSize:'9px', fontWeight:400, color:'#C4956A', textTransform:'none', letterSpacing:0}}>
+                                pick cuisine first
+                            </span>
+                        }
                     </span>
-                    <div className="flex flex-wrap gap-2">
+                    <div style={{display:'flex', flexWrap:'wrap', gap:'8px'}}>
                         {mealTypes.map(m => (
                             <button key={m.name} onClick={() => setSelectedMealType(m.name)}
-                                className={`px-4 py-2 rounded-full text-sm transition-all duration-200 cursor-pointer ${selectedMealType === m.name ? 'filter-pill-sub-active' : 'filter-pill-inactive'}`}
-                                style={{fontFamily:'Poppins,sans-serif'}}>
-                                <span className="mr-1.5">{m.emoji}</span>{m.label}
+                                style={{
+                                    height:'30px', padding:'0 14px',
+                                    borderRadius:'9999px', fontSize:'12px',
+                                    fontFamily:'Poppins,sans-serif', fontWeight:500,
+                                    cursor:'pointer', border:'none',
+                                    display:'flex', alignItems:'center', gap:'5px',
+                                    transition:'all 0.18s ease',
+                                    background: selectedMealType === m.name ? '#3B1F0A' : '#FDF6EC',
+                                    color: selectedMealType === m.name ? '#fff' : '#3B1F0A',
+                                    boxShadow: selectedMealType === m.name
+                                        ? '0 2px 6px rgba(59,31,10,0.2)'
+                                        : 'none',
+                                    outline: selectedMealType === m.name
+                                        ? 'none'
+                                        : '1px solid rgba(244,162,40,0.35)',
+                                }}>
+                                <span style={{fontSize:'13px'}}>{m.emoji}</span>{m.label}
                             </button>
                         ))}
                     </div>
                 </div>
 
                 {/* Row 3 — Diet */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-3 border-t"
-                    style={{ borderColor: 'rgba(244,162,40,0.2)' }}>
-                    <span className="text-xs font-bold uppercase tracking-wider w-24 flex-shrink-0" style={{color:'#A0522D', fontFamily:'Poppins,sans-serif'}}>Diet</span>
-                    <div className="flex gap-2 p-1 rounded-xl" style={{background:'rgba(244,162,40,0.08)'}}>
+                <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                    <span style={{
+                        width:'80px', flexShrink:0,
+                        fontSize:'10px', fontWeight:600,
+                        letterSpacing:'0.06em', textTransform:'uppercase',
+                        color:'#A0522D', fontFamily:'Poppins,sans-serif'
+                    }}>Diet</span>
+                    <div style={{display:'flex', gap:'8px'}}>
                         {dietTypes.map(d => (
                             <button key={d.name} onClick={() => setSelectedDiet(d.name)}
-                                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${selectedDiet === d.name ? 'filter-pill-active' : 'text-[#3B1F0A] hover:bg-amber-50'}`}
-                                style={{fontFamily:'Poppins,sans-serif'}}>
-                                <span className="text-xs">{d.emoji}</span>{d.name}
+                                style={{
+                                    height:'30px', padding:'0 14px',
+                                    borderRadius:'9999px', fontSize:'12px',
+                                    fontFamily:'Poppins,sans-serif', fontWeight:500,
+                                    cursor:'pointer', border:'none',
+                                    display:'flex', alignItems:'center', gap:'5px',
+                                    transition:'all 0.18s ease',
+                                    background: selectedDiet === d.name
+                                        ? 'linear-gradient(135deg, #F4A228, #E8B84B)'
+                                        : '#FDF6EC',
+                                    color: selectedDiet === d.name ? '#fff' : '#3B1F0A',
+                                    boxShadow: selectedDiet === d.name
+                                        ? '0 2px 6px rgba(244,162,40,0.3)'
+                                        : 'none',
+                                    outline: selectedDiet === d.name
+                                        ? 'none'
+                                        : '1px solid rgba(244,162,40,0.35)',
+                                }}>
+                                <span style={{fontSize:'13px'}}>{d.emoji}</span>{d.name}
                             </button>
                         ))}
                     </div>

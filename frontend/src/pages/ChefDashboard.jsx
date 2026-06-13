@@ -19,8 +19,10 @@ const ChefDashboard = () => {
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
     const [imageUrl, setImageUrl] = useState('');
-    const [category, setCategory] = useState('South Indian');
+    const [cuisine, setCuisine] = useState('South Indian');
+    const [mealType, setMealType] = useState('Lunch');
     const [dietType, setDietType] = useState('Veg');
+    const [addMsg, setAddMsg] = useState({ type: '', text: '' });
 
     const { user } = useContext(AuthContext);
 
@@ -50,10 +52,16 @@ const ChefDashboard = () => {
         fetchData();
     }, [user]);
 
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        if (tab === 'earnings' && !earnings) {
+            setEarningsLoading(true);
+        }
+    };
+
     // Lazy-load earnings when tab is opened
     useEffect(() => {
         if (activeTab === 'earnings' && !earnings) {
-            setEarningsLoading(true);
             axiosInstance.get('/api/orders/earnings')
                 .then(res => { setEarnings(res.data); setEarningsLoading(false); })
                 .catch(() => setEarningsLoading(false));
@@ -65,60 +73,48 @@ const ChefDashboard = () => {
             const { data } = await axiosInstance.put('/api/chefs/availability');
             setIsAvailable(data.isAvailable);
         } catch (err) {
-            alert(err.response?.data?.message || err.message);
+            console.error('Availability toggle failed:', err.message);
         }
     };
 
     const handleStatusUpdate = async (orderId, newStatus) => {
         try {
             await axiosInstance.put(`/api/orders/${orderId}/status`, { status: newStatus });
-
-            // Update local state
             setOrders(orders.map(order =>
                 order._id === orderId ? { ...order, status: newStatus } : order
             ));
         } catch (err) {
-            alert(err.response?.data?.message || err.message);
+            console.error('Status update failed:', err.message);
         }
     };
 
     const handleAddFood = async (e) => {
         e.preventDefault();
+        setAddMsg({ type: '', text: '' });
         try {
-            const newFood = { 
-                title, 
-                description, 
-                price: Number(price), 
-                imageUrl, 
-                category, 
-                dietType 
+            const newFood = {
+                title, description,
+                price: Number(price),
+                imageUrl, cuisine, mealType, dietType,
+                category: cuisine  // keep legacy field in sync
             };
             const { data } = await axiosInstance.post('/api/food', newFood);
-
             setFoodItems([...foodItems, { ...data, chefName: user.name }]);
-
-            // Clear form
-            setTitle(''); 
-            setDescription(''); 
-            setPrice(''); 
-            setImageUrl('');
-            setCategory('South Indian');
-            setDietType('Veg');
-            alert('Food item added successfully!');
-
+            setTitle(''); setDescription(''); setPrice(''); setImageUrl('');
+            setCuisine('South Indian'); setMealType('Lunch'); setDietType('Veg');
+            setAddMsg({ type: 'success', text: 'Dish added successfully!' });
         } catch (err) {
-            alert(err.response?.data?.message || err.message);
+            setAddMsg({ type: 'error', text: err.response?.data?.message || err.message });
         }
     };
 
     const handleDeleteFood = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this listing?')) return;
+        if (!window.confirm('Delete this listing?')) return;
         try {
             await axiosInstance.delete(`/api/food/${id}`);
             setFoodItems(foodItems.filter(item => item._id !== id));
-            alert('Food item deleted successfully.');
         } catch (err) {
-            alert(err.response?.data?.message || err.message);
+            setAddMsg({ type: 'error', text: err.response?.data?.message || err.message });
         }
     };
 
@@ -146,7 +142,7 @@ const ChefDashboard = () => {
                 </button>
                 <div className="flex bg-white p-1 rounded-xl shadow-sm border border-brand-border-gray/60 self-start">
                     <button
-                        onClick={() => setActiveTab('orders')}
+                        onClick={() => handleTabChange('orders')}
                         className={`px-4 py-2.5 rounded-lg text-xs font-bold tracking-wide uppercase transition-all duration-200 cursor-pointer ${
                             activeTab === 'orders' 
                                 ? 'bg-brand-orange text-white shadow-sm' 
@@ -156,7 +152,7 @@ const ChefDashboard = () => {
                         📋 Orders ({orders.length})
                     </button>
                     <button
-                        onClick={() => setActiveTab('listings')}
+                        onClick={() => handleTabChange('listings')}
                         className={`px-4 py-2.5 rounded-lg text-xs font-bold tracking-wide uppercase transition-all duration-200 cursor-pointer ${
                             activeTab === 'listings' 
                                 ? 'bg-brand-orange text-white shadow-sm' 
@@ -166,7 +162,7 @@ const ChefDashboard = () => {
                         🍳 My Menu ({foodItems.length})
                     </button>
                     <button
-                        onClick={() => setActiveTab('earnings')}
+                        onClick={() => handleTabChange('earnings')}
                         className={`px-4 py-2.5 rounded-lg text-xs font-bold tracking-wide uppercase transition-all duration-200 cursor-pointer ${
                             activeTab === 'earnings' 
                                 ? 'bg-brand-orange text-white shadow-sm' 
@@ -291,77 +287,62 @@ const ChefDashboard = () => {
                         <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-brand-border-gray/60">
                             <h2 className="text-xl font-extrabold text-brand-dark-brown mb-4 tracking-tight">Add New Dish</h2>
                             <form onSubmit={handleAddFood} className="space-y-4">
+                                {addMsg.text && (
+                                    <div className={`rounded-xl p-3 text-xs font-semibold text-center ${addMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
+                                        {addMsg.text}
+                                    </div>
+                                )}
                                 <div>
                                     <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Dish Title</label>
-                                    <input 
-                                        type="text" 
-                                        required 
-                                        value={title} 
-                                        onChange={(e) => setTitle(e.target.value)} 
-                                        placeholder="e.g., Spicy Butter Chicken"
-                                        className="appearance-none rounded-xl relative block w-full px-3.5 py-2.5 border border-brand-border-gray placeholder-gray-400 text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange text-sm font-semibold bg-brand-light-gray/40 transition-colors" 
-                                    />
+                                    <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., Spicy Butter Chicken"
+                                        className="appearance-none rounded-xl block w-full px-3.5 py-2.5 border border-brand-border-gray placeholder-gray-400 text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange text-sm font-semibold bg-brand-light-gray/40" />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Description</label>
-                                    <textarea 
-                                        required 
-                                        value={description} 
-                                        onChange={(e) => setDescription(e.target.value)} 
+                                    <textarea required value={description} onChange={e => setDescription(e.target.value)} rows="3"
                                         placeholder="Describe the dish ingredients and taste profile..."
-                                        className="appearance-none rounded-xl relative block w-full px-3.5 py-2.5 border border-brand-border-gray placeholder-gray-400 text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange text-sm font-semibold bg-brand-light-gray/40 transition-colors" 
-                                        rows="3"
-                                    />
+                                        className="appearance-none rounded-xl block w-full px-3.5 py-2.5 border border-brand-border-gray placeholder-gray-400 text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange text-sm font-semibold bg-brand-light-gray/40" />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Price (₹)</label>
-                                    <input 
-                                        type="number" 
-                                        step="0.01" 
-                                        required 
-                                        value={price} 
-                                        onChange={(e) => setPrice(e.target.value)} 
-                                        placeholder="199"
-                                        className="appearance-none rounded-xl relative block w-full px-3.5 py-2.5 border border-brand-border-gray placeholder-gray-400 text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange text-sm font-semibold bg-brand-light-gray/40 transition-colors" 
-                                    />
+                                    <input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} placeholder="199"
+                                        className="appearance-none rounded-xl block w-full px-3.5 py-2.5 border border-brand-border-gray placeholder-gray-400 text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange text-sm font-semibold bg-brand-light-gray/40" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Cuisine</label>
+                                        <select value={cuisine} onChange={e => setCuisine(e.target.value)}
+                                            className="block w-full px-3.5 py-2.5 border border-brand-border-gray text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 text-sm rounded-xl bg-white font-semibold">
+                                            <option value="South Indian">🍛 South Indian</option>
+                                            <option value="North Indian">🫓 North Indian</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Meal Type</label>
+                                        <select value={mealType} onChange={e => setMealType(e.target.value)}
+                                            className="block w-full px-3.5 py-2.5 border border-brand-border-gray text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 text-sm rounded-xl bg-white font-semibold">
+                                            <option value="Breakfast">🌅 Breakfast</option>
+                                            <option value="Lunch">☀️ Lunch</option>
+                                            <option value="Dinner">🌙 Dinner</option>
+                                            <option value="Snack">🍟 Snack</option>
+                                            <option value="Tiffin">🥗 Tiffin</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Diet Type</label>
-                                    <select
-                                        value={dietType}
-                                        onChange={(e) => setDietType(e.target.value)}
-                                        className="block w-full px-3.5 py-2.5 border border-brand-border-gray text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange text-sm rounded-xl bg-white cursor-pointer hover:border-brand-orange transition-colors font-semibold"
-                                    >
+                                    <select value={dietType} onChange={e => setDietType(e.target.value)}
+                                        className="block w-full px-3.5 py-2.5 border border-brand-border-gray text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 text-sm rounded-xl bg-white font-semibold">
                                         <option value="Veg">🟢 Veg</option>
                                         <option value="Non-Veg">🔴 Non-Veg</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Category</label>
-                                    <select
-                                        value={category}
-                                        onChange={(e) => setCategory(e.target.value)}
-                                        className="block w-full px-3.5 py-2.5 border border-brand-border-gray text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange text-sm rounded-xl bg-white cursor-pointer hover:border-brand-orange transition-colors font-semibold"
-                                    >
-                                        <option value="North Indian">North Indian</option>
-                                        <option value="South Indian">South Indian</option>
-                                        <option value="Snacks">Snacks</option>
-                                        <option value="Tiffins">Tiffins</option>
-                                    </select>
-                                </div>
-                                <div>
                                     <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Dish Image (Optional)</label>
-                                    <ImageUpload
-                                        currentUrl={imageUrl}
-                                        onUpload={(url) => setImageUrl(url)}
-                                        label=""
-                                        aspectRatio="landscape"
-                                    />
+                                    <ImageUpload currentUrl={imageUrl} onUpload={url => setImageUrl(url)} label="" aspectRatio="landscape" />
                                 </div>
-                                <button 
-                                    type="submit" 
-                                    className="w-full bg-brand-orange hover:bg-brand-hover-orange text-white py-3 rounded-xl text-sm font-bold shadow-sm transition-all btn-active-scale cursor-pointer"
-                                >
+                                <button type="submit"
+                                    className="w-full bg-brand-orange hover:bg-brand-hover-orange text-white py-3 rounded-xl text-sm font-bold shadow-sm transition-all btn-active-scale cursor-pointer">
                                     Add Listing
                                 </button>
                             </form>

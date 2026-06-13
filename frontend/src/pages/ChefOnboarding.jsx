@@ -21,7 +21,7 @@ const ProgressBar = ({ step }) => (
 );
 
 const ChefOnboarding = () => {
-    const { user, login } = useContext(AuthContext);
+    const { user } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const [step, setStep] = useState(1);
@@ -38,7 +38,8 @@ const ChefOnboarding = () => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
-    const [category, setCategory] = useState('South Indian');
+    const [cuisine, setCuisine] = useState('South Indian');
+    const [mealType, setMealType] = useState('Lunch');
     const [dietType, setDietType] = useState('Veg');
 
     const handleProfileSave = async () => {
@@ -71,8 +72,10 @@ const ChefOnboarding = () => {
                 title,
                 description,
                 price: Number(price),
-                category,
-                dietType
+                cuisine,
+                mealType,
+                dietType,
+                category: cuisine
             });
             await axiosInstance.put('/api/chefs/onboarding');
             setStep(4);
@@ -237,39 +240,36 @@ const ChefOnboarding = () => {
                             <div className="grid grid-cols-3 gap-3">
                                 <div>
                                     <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Price (₹) *</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={price}
-                                        onChange={e => setPrice(e.target.value)}
-                                        placeholder="150"
-                                        className="w-full px-3 py-2.5 border border-brand-border-gray rounded-xl text-sm font-semibold text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange bg-brand-light-gray/40"
-                                    />
+                                    <input type="number" min="1" value={price} onChange={e => setPrice(e.target.value)} placeholder="150"
+                                        className="w-full px-3 py-2.5 border border-brand-border-gray rounded-xl text-sm font-semibold text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange bg-brand-light-gray/40" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Category</label>
-                                    <select
-                                        value={category}
-                                        onChange={e => setCategory(e.target.value)}
-                                        className="w-full px-3 py-2.5 border border-brand-border-gray rounded-xl text-xs font-semibold text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 bg-white"
-                                    >
-                                        <option>South Indian</option>
-                                        <option>North Indian</option>
-                                        <option>Snacks</option>
-                                        <option>Tiffins</option>
+                                    <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Cuisine</label>
+                                    <select value={cuisine} onChange={e => setCuisine(e.target.value)}
+                                        className="w-full px-3 py-2.5 border border-brand-border-gray rounded-xl text-xs font-semibold text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 bg-white">
+                                        <option value="South Indian">🍛 South Indian</option>
+                                        <option value="North Indian">🫓 North Indian</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Diet</label>
-                                    <select
-                                        value={dietType}
-                                        onChange={e => setDietType(e.target.value)}
-                                        className="w-full px-3 py-2.5 border border-brand-border-gray rounded-xl text-xs font-semibold text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 bg-white"
-                                    >
-                                        <option value="Veg">🟢 Veg</option>
-                                        <option value="Non-Veg">🔴 Non-Veg</option>
+                                    <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Meal Type</label>
+                                    <select value={mealType} onChange={e => setMealType(e.target.value)}
+                                        className="w-full px-3 py-2.5 border border-brand-border-gray rounded-xl text-xs font-semibold text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 bg-white">
+                                        <option value="Breakfast">🌅 Breakfast</option>
+                                        <option value="Lunch">☀️ Lunch</option>
+                                        <option value="Dinner">🌙 Dinner</option>
+                                        <option value="Snack">🍟 Snack</option>
+                                        <option value="Tiffin">🥗 Tiffin</option>
                                     </select>
                                 </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Diet</label>
+                                <select value={dietType} onChange={e => setDietType(e.target.value)}
+                                    className="w-full px-3 py-2.5 border border-brand-border-gray rounded-xl text-xs font-semibold text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 bg-white">
+                                    <option value="Veg">🟢 Veg</option>
+                                    <option value="Non-Veg">🔴 Non-Veg</option>
+                                </select>
                             </div>
                             <button
                                 onClick={handleDishSave}

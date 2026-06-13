@@ -51,7 +51,14 @@ const ChefDiscovery = () => {
     };
 
     useEffect(() => {
-        fetchChefs(cityFilter, page);
+        let active = true;
+        const load = async () => {
+            await Promise.resolve();
+            if (!active) return;
+            fetchChefs(cityFilter, page);
+        };
+        load();
+        return () => { active = false; };
     }, [cityFilter, page]);
 
     const handleCitySearch = (e) => {

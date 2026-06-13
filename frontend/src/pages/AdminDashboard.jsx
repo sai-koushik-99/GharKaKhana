@@ -1,6 +1,5 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import axiosInstance from '../utils/axiosInstance';
-import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import ImageWithFallback from '../components/ImageWithFallback';
 import ImageUpload from '../components/ImageUpload';
@@ -18,15 +17,16 @@ const AdminDashboard = () => {
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
     const [imageUrl, setImageUrl] = useState('');
-    const [category, setCategory] = useState('South Indian');
+    const [cuisine, setCuisine] = useState('South Indian');
+    const [mealType, setMealType] = useState('Lunch');
     const [dietType, setDietType] = useState('Veg');
-
-    const { user } = useContext(AuthContext);
+    const [formMsg, setFormMsg] = useState({ type: '', text: '' });
 
     useEffect(() => { fetchFoodItems(); }, []);
 
     useEffect(() => {
         if (activeTab === 'chefs' && chefs.length === 0) fetchAllChefs();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab]);
 
     const fetchFoodItems = async () => {
@@ -75,19 +75,27 @@ const AdminDashboard = () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
+        setFormMsg({ type: '', text: '' });
         try {
-            const foodData = { title, description, price: Number(price), imageUrl, category, dietType };
+            // category kept for backward compat — mirrors cuisine
+            const foodData = {
+                title, description, price: Number(price), imageUrl,
+                cuisine, mealType, dietType,
+                category: cuisine  // keep legacy field in sync
+            };
             if (editingId) {
                 await axiosInstance.put(`/api/food/${editingId}`, foodData);
+                setFormMsg({ type: 'success', text: 'Item updated successfully.' });
             } else {
                 await axiosInstance.post('/api/food', foodData);
+                setFormMsg({ type: 'success', text: 'Item added successfully.' });
             }
             setEditingId(null);
             setTitle(''); setDescription(''); setPrice(''); setImageUrl('');
-            setCategory('South Indian'); setDietType('Veg');
+            setCuisine('South Indian'); setMealType('Lunch'); setDietType('Veg');
             fetchFoodItems();
         } catch (err) {
-            alert(err.response?.data?.message || err.message);
+            setFormMsg({ type: 'error', text: err.response?.data?.message || err.message });
         }
     };
 
@@ -95,8 +103,10 @@ const AdminDashboard = () => {
         setEditingId(item._id);
         setTitle(item.title); setDescription(item.description);
         setPrice(item.price); setImageUrl(item.imageUrl || '');
-        setCategory(item.category || 'South Indian');
+        setCuisine(item.cuisine || item.category || 'South Indian');
+        setMealType(item.mealType || 'Lunch');
         setDietType(item.dietType || 'Veg');
+        setFormMsg({ type: '', text: '' });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -106,14 +116,15 @@ const AdminDashboard = () => {
             await axiosInstance.delete(`/api/food/${id}`);
             fetchFoodItems();
         } catch (err) {
-            alert(err.response?.data?.message || err.message);
+            setFormMsg({ type: 'error', text: err.response?.data?.message || err.message });
         }
     };
 
     const cancelEdit = () => {
         setEditingId(null);
         setTitle(''); setDescription(''); setPrice(''); setImageUrl('');
-        setCategory('South Indian'); setDietType('Veg');
+        setCuisine('South Indian'); setMealType('Lunch'); setDietType('Veg');
+        setFormMsg({ type: '', text: '' });
     };
 
     if (loading) return <div className="text-center py-16 text-brand-mid-gray font-medium">Loading Admin Dashboard...</div>;
@@ -149,6 +160,11 @@ const AdminDashboard = () => {
                                 {editingId ? '📝 Edit Food Item' : '➕ Add Food Item'}
                             </h2>
                             <form onSubmit={handleSave} className="space-y-4">
+                                {formMsg.text && (
+                                    <div className={`rounded-xl p-3 text-xs font-semibold text-center ${formMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
+                                        {formMsg.text}
+                                    </div>
+                                )}
                                 <div>
                                     <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Dish Title</label>
                                     <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., Masala Dosa"
@@ -162,25 +178,39 @@ const AdminDashboard = () => {
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Category</label>
-                                        <select value={category} onChange={e => setCategory(e.target.value)}
+                                        <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Cuisine</label>
+                                        <select value={cuisine} onChange={e => setCuisine(e.target.value)}
                                             className="block w-full px-3 py-2.5 border border-brand-border-gray text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 text-xs rounded-xl bg-white font-semibold">
-                                            <option>South Indian</option><option>North Indian</option>
-                                            <option>Snacks</option><option>Tiffins</option>
+                                            <option value="South Indian">🍛 South Indian</option>
+                                            <option value="North Indian">🫓 North Indian</option>
                                         </select>
                                     </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Meal Type</label>
+                                        <select value={mealType} onChange={e => setMealType(e.target.value)}
+                                            className="block w-full px-3 py-2.5 border border-brand-border-gray text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 text-xs rounded-xl bg-white font-semibold">
+                                            <option value="Breakfast">🌅 Breakfast</option>
+                                            <option value="Lunch">☀️ Lunch</option>
+                                            <option value="Dinner">🌙 Dinner</option>
+                                            <option value="Snack">🍟 Snack</option>
+                                            <option value="Tiffin">🥗 Tiffin</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Diet</label>
                                         <select value={dietType} onChange={e => setDietType(e.target.value)}
                                             className="block w-full px-3 py-2.5 border border-brand-border-gray text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 text-xs rounded-xl bg-white font-semibold">
-                                            <option value="Veg">🟢 Veg</option><option value="Non-Veg">🔴 Non-Veg</option>
+                                            <option value="Veg">🟢 Veg</option>
+                                            <option value="Non-Veg">🔴 Non-Veg</option>
                                         </select>
                                     </div>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Price (₹)</label>
-                                    <input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} placeholder="150"
-                                        className="rounded-xl block w-full px-3.5 py-2.5 border border-brand-border-gray text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 text-sm font-semibold bg-brand-light-gray/40" />
+                                    <div>
+                                        <label className="block text-xs font-bold text-brand-mid-gray uppercase tracking-wider mb-1.5">Price (₹)</label>
+                                        <input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} placeholder="150"
+                                            className="rounded-xl block w-full px-3.5 py-2.5 border border-brand-border-gray text-brand-dark-brown focus:outline-none focus:ring-2 focus:ring-brand-orange/30 text-sm font-semibold bg-brand-light-gray/40" />
+                                    </div>
                                 </div>
                                 <ImageUpload currentUrl={imageUrl} onUpload={url => setImageUrl(url)} label="Dish Image" aspectRatio="landscape" />
                                 <div className="flex gap-3 pt-3 border-t border-brand-border-gray/50">
@@ -212,8 +242,9 @@ const AdminDashboard = () => {
                                         <div className="flex justify-between items-start gap-4">
                                             <div>
                                                 <h3 className="font-extrabold text-base text-brand-dark-brown truncate">{item.title}</h3>
-                                                <div className="flex gap-2 mt-1.5">
-                                                    <span className="bg-brand-light-orange text-brand-orange text-[9px] px-2.5 py-0.5 rounded-md font-bold uppercase">{item.category}</span>
+                                                <div className="flex gap-2 mt-1.5 flex-wrap">
+                                                    <span className="bg-brand-light-orange text-brand-orange text-[9px] px-2.5 py-0.5 rounded-md font-bold uppercase">{item.cuisine || item.category}</span>
+                                                    {item.mealType && <span className="bg-amber-50 text-amber-700 text-[9px] px-2.5 py-0.5 rounded-md font-bold uppercase">{item.mealType}</span>}
                                                     <span className={`text-[9px] px-2.5 py-0.5 rounded-md font-bold uppercase ${item.dietType === 'Veg' ? 'bg-emerald-50 text-brand-veg-green' : 'bg-red-50 text-brand-nonveg-red'}`}>
                                                         {item.dietType === 'Veg' ? '🟢 Veg' : '🔴 Non-Veg'}
                                                     </span>

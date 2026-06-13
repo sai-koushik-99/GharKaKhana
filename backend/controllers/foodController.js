@@ -68,14 +68,16 @@ const getFoodItemById = async (req, res) => {
 // @access  Private/Chef
 const createFoodItem = async (req, res) => {
     try {
-        const { title, description, price, imageUrl, category, dietType } = req.body;
+        const { title, description, price, imageUrl, category, dietType, cuisine, mealType } = req.body;
 
         const foodItem = new FoodItem({
             title,
             description,
             price,
             imageUrl,
-            category: category || 'South Indian',
+            category: category || cuisine || 'South Indian',
+            cuisine: cuisine || category || 'South Indian',
+            mealType: mealType || 'Lunch',
             dietType: dietType || 'Veg',
             chefId: req.user._id
         });
@@ -92,7 +94,7 @@ const createFoodItem = async (req, res) => {
 // @access  Private/Chef
 const updateFoodItem = async (req, res) => {
     try {
-        const { title, description, price, imageUrl, category, dietType } = req.body;
+        const { title, description, price, imageUrl, category, dietType, cuisine, mealType } = req.body;
         const item = await FoodItem.findById(req.params.id);
 
         if (item) {
@@ -106,6 +108,8 @@ const updateFoodItem = async (req, res) => {
             item.price = price || item.price;
             item.imageUrl = imageUrl || item.imageUrl;
             item.category = category || item.category;
+            item.cuisine = cuisine || item.cuisine;
+            item.mealType = mealType || item.mealType;
             item.dietType = dietType || item.dietType;
 
             const updatedItem = await item.save();

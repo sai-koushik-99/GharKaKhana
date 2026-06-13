@@ -63,6 +63,14 @@ const validateFoodItem = [
         .optional()
         .isIn(['North Indian', 'South Indian', 'Snacks', 'Tiffins'])
         .withMessage('Invalid category'),
+    body('cuisine')
+        .optional()
+        .isIn(['North Indian', 'South Indian', 'Other'])
+        .withMessage('Invalid cuisine'),
+    body('mealType')
+        .optional()
+        .isIn(['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Tiffin'])
+        .withMessage('Invalid meal type'),
     body('dietType')
         .optional()
         .isIn(['Veg', 'Non-Veg'])

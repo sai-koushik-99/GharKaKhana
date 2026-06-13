@@ -18,6 +18,30 @@ const StarDisplay = ({ rating }) => (
     </div>
 );
 
+// Mandala SVG watermark
+const MandalaWatermark = () => (
+    <svg className="food-card-watermark" viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="50" r="48" stroke="#F4A228" strokeWidth="1"/>
+        <circle cx="50" cy="50" r="36" stroke="#F4A228" strokeWidth="1"/>
+        <circle cx="50" cy="50" r="24" stroke="#F4A228" strokeWidth="1"/>
+        <circle cx="50" cy="50" r="12" stroke="#F4A228" strokeWidth="1"/>
+        {[0,45,90,135,180,225,270,315].map((a, i) => (
+            <line key={i}
+                x1="50" y1="2"
+                x2="50" y2="98"
+                stroke="#F4A228" strokeWidth="0.5"
+                transform={`rotate(${a} 50 50)`}
+            />
+        ))}
+        {[0,45,90,135,180,225,270,315].map((a, i) => (
+            <ellipse key={i} cx="50" cy="26" rx="4" ry="8"
+                stroke="#F4A228" strokeWidth="0.5"
+                transform={`rotate(${a} 50 50)`}
+            />
+        ))}
+    </svg>
+);
+
 const ChefProfile = () => {
     const { id } = useParams();
     const [chef, setChef] = useState(null);
@@ -158,26 +182,66 @@ const ChefProfile = () => {
                         <p className="text-brand-mid-gray font-medium">No dishes listed yet.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                    <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:'16px'}}>
                         {foodItems.map(item => (
-                            <div key={item._id} className="bg-white rounded-2xl border border-brand-border-gray overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-200 flex flex-col">
-                                <div className="h-44 relative">
+                            <div key={item._id} className="food-card flex flex-col">
+                                <MandalaWatermark />
+
+                                {/* IMAGE */}
+                                <div className="relative flex-shrink-0"
+                                    style={{height:'130px', borderRadius:'9px 9px 0 0', overflow:'hidden'}}>
                                     <ImageWithFallback src={item.imageUrl} alt={item.title} dishName={item.title} className="w-full h-full" />
-                                    <div className={`absolute top-3 right-3 w-6 h-6 bg-white rounded-md shadow flex items-center justify-center border ${item.dietType === 'Veg' ? 'border-brand-veg-green/30' : 'border-brand-nonveg-red/30'}`}>
-                                        <div className={`w-3 h-3 rounded-full ${item.dietType === 'Veg' ? 'bg-brand-veg-green' : 'bg-brand-nonveg-red'}`}></div>
-                                    </div>
+                                    <div className="absolute inset-0 pointer-events-none"
+                                        style={{background:'rgba(244,162,40,0.05)'}}></div>
+                                    <div className="absolute bottom-0 left-0 right-0 pointer-events-none"
+                                        style={{height:'40px', background:'linear-gradient(to top, #FDF6EC 0%, transparent 100%)'}}></div>
+                                    
+                                    {item.mealType && (
+                                        <div className="absolute top-2 left-2 z-10 meal-type-badge flex items-center gap-1">
+                                            🍽️ {item.mealType}
+                                        </div>
+                                    )}
+
+                                    {item.dietType && (
+                                        <div className="absolute top-2 right-2 z-10 flex items-center justify-center bg-white rounded-full shadow"
+                                            style={{width:'24px', height:'24px', border: item.dietType === 'Veg' ? '1.5px solid #2D6A4F' : '1.5px solid #C0392B'}}>
+                                            <div className="rounded-full"
+                                                style={{width:'10px', height:'10px', background: item.dietType === 'Veg' ? '#2D6A4F' : '#C0392B'}}></div>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="p-4 flex flex-col flex-grow">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <h3 className="font-bold text-brand-dark-brown text-sm line-clamp-1">{item.title}</h3>
-                                        <span className="text-brand-orange font-extrabold text-sm">₹{item.price}</span>
+
+                                {/* CARD BODY */}
+                                <div className="flex flex-col flex-grow relative z-10" style={{padding:'10px 12px'}}>
+                                    <h3 className="line-clamp-1 hover:text-[#C1440E] transition-colors mb-0.5"
+                                        style={{fontFamily:'Poppins,sans-serif', fontSize:'14px', fontWeight:500, color:'#3B1F0A'}}>
+                                        <Link to={`/dish/${item._id}`}>{item.title}</Link>
+                                    </h3>
+                                    <p className="mb-1.5 flex items-center gap-1 truncate"
+                                        style={{fontFamily:'Hind,sans-serif', fontSize:'12px', color:'#A0522D'}}>
+                                        <span style={{fontSize:'11px'}}>👩‍🍳</span>
+                                        {chef.name}
+                                    </p>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="flex items-center gap-0.5"
+                                            style={{fontSize:'11px', color:'#8B5E3C', fontFamily:'Hind,sans-serif'}}>
+                                            <span style={{color:'#F4A228'}}>⭐</span> 4.8
+                                        </span>
+                                        <span className="rounded-full px-1.5 py-0.5"
+                                            style={{fontSize:'10px', fontWeight:600, background:'rgba(244,162,40,0.12)', color:'#A0522D', fontFamily:'Poppins,sans-serif'}}>
+                                            {item.cuisine || item.category}
+                                        </span>
                                     </div>
-                                    <p className="text-xs text-brand-mid-gray line-clamp-2 mb-4 flex-grow">{item.description}</p>
-                                    <Link
-                                        to={`/dish/${item._id}`}
-                                        className="block w-full text-center bg-brand-orange text-white px-4 py-2 rounded-xl font-bold hover:bg-brand-hover-orange transition-colors text-sm"
-                                    >
-                                        Order Now
+                                    <div className="flex items-center justify-between mb-2.5">
+                                        <span style={{fontFamily:'Poppins,sans-serif', fontSize:'15px', fontWeight:700, color:'#F4A228'}}>
+                                            ₹{item.price.toFixed(0)}
+                                        </span>
+                                        <span style={{fontSize:'10px', fontWeight:600, color: item.dietType === 'Veg' ? '#2D6A4F' : '#C0392B'}}>
+                                            {item.dietType}
+                                        </span>
+                                    </div>
+                                    <Link to={`/dish/${item._id}`} className="add-to-cart-btn mt-auto">
+                                        Order Now <span>→</span>
                                     </Link>
                                 </div>
                             </div>
