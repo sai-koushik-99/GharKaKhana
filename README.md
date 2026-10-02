@@ -1,4 +1,4 @@
-# HomeBite 🍛
+# GharKaKhana (HomeBites) 🍛
 
 > **Ghar ka swad, door tak** — Home taste, far away.
 
@@ -10,10 +10,11 @@ A platform that connects home chefs (housewives) with customers who want afforda
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 19, Vite, Tailwind CSS v4, React Router v7 |
+| Frontend | React 19, Vite, Tailwind CSS v4, React Router v7, Axios |
 | Backend | Node.js, Express 5, MongoDB, Mongoose |
-| Auth | JWT (30-day tokens) |
-| Images | Cloudinary |
+| Security | Helmet, Express-Rate-Limit, CORS |
+| Auth | JWT (30-day tokens), bcryptjs |
+| Images | Cloudinary, Multer, Streamifier |
 | Validation | express-validator |
 
 ---
@@ -21,7 +22,7 @@ A platform that connects home chefs (housewives) with customers who want afforda
 ## Project Structure
 
 ```
-GharKaKhana-main/
+GharKaKhana/
 ├── backend/          # Express REST API
 │   ├── config/       # DB + Cloudinary config
 │   ├── controllers/  # Route handlers
@@ -44,14 +45,14 @@ GharKaKhana-main/
 
 ### Prerequisites
 - Node.js 18+
-- MongoDB running locally (`mongod`)
+- MongoDB running locally (`mongod`) or MongoDB Atlas URI
 
 ### Backend
 ```bash
 cd backend
 cp .env.example .env   # fill in your values
 npm install
-node server.js
+npm run dev            # (or node server.js)
 ```
 
 ### Frontend
